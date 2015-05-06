@@ -1,0 +1,62 @@
+inherit python3
+
+NAME="eric6"
+VERSION=6.0.5
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="IDE for Python and Ruby"
+DESCRIPTION="eric6 is a full featured Python (and Ruby) IDE that is written
+in PyQt using the QScintilla editor widget."
+HOMEPAGE="http://eric-ide.python-projects.org/"
+SRC_URI="
+	mirror://sourceforge/eric-ide/${NAME}-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-cs-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-de-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-en-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-es-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-fr-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-it-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-pt-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-ru-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-tr-${VERSION}.tar.gz
+	mirror://sourceforge/eric-ide/${NAME}-i18n-zh_CN.GB2312-${VERSION}.tar.gz
+"
+
+ARCH=noarch
+
+OBSOLETES="eric4 eric5"
+
+RESTRICT="diff"
+
+CYGPORT_USE_UNSTABLE_API=1
+src_unpack_hook() {
+	rm -fr eric/ThirdParty/{CharDet,Pygments} eric/DebugClients/Python*/coverage
+	sed -i -e '\|/coverage/|d;\|ThirdParty/CharDet/|d;\|ThirdParty/Pygments/|d' eric/${NAME}.e4p
+	sed -i -e 's/from DebugClients\.Python3\?\.coverage /from coverage /' \
+	    $(grep -lr 'from DebugClients\.Python3\?\.coverage' .)
+	sed -i -e 's/ThirdParty\.CharDet\.//' $(grep -lr 'CharDet\.chardet' .)
+}
+
+src_compile() { :; }
+
+src_test() { :; }
+
+src_install() {
+	cd ${S}
+
+	${PYTHON3} install.py \
+		-b /usr/bin \
+		-c \
+		-d ${PYTHON3_SITELIB} \
+		-i ${D} \
+		-x \
+		-z \
+		|| error "install.py failed"
+
+	python3_optimize
+
+	newicon eric/icons/default/eric.png eric6.png
+	make_desktop_entry eric6 "Eric IDE" eric6.png "Development;IDE;Qt"
+
+	dodoc eric/README*
+}
